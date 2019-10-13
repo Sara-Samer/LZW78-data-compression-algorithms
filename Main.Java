@@ -1,29 +1,60 @@
-package lzw78;
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*; 
+import java.util.*;
 import java.io.*; 
 
 
-public class LZW78 {
+public class Main {
 	public static void main(String[] args) throws IOException {
-        String inString =  "", word = "", dicPath = "E:\\eclipse\\eclipse-workspace\\lzw78\\src\\lzw78\\dic.txt";
-											//Don't forget to change file path
+        String dicPath = System.getProperty("user.dir") + File.separatorChar + "dictionary.txt";
         String outString = "";
-        @SuppressWarnings("resource")
+        int selection = 0;
 		Scanner inStream = new Scanner(System.in);
         
-        List<String> lines = Collections.emptyList(); //Create empty list to store dictionary 
-        lines = readAllLines(dicPath, lines); //load dictionary in ArrayList
-        Integer index = 0, lastIndex = 0, startPoint = lines.size();
-        
-       // checkFile(dicPath);
-     
-        inString = inStream.nextLine();
+		
+		System.out.println("do you want to compress \n(1) file.txt \n(2) text\n");
+		selection = Integer.parseInt(inStream.nextLine());
+		switch (selection){
+			case 1:
+				System.out.println("Please enter File.txt Path: ");
+				String p = inStream.nextLine();
+				outString = Compress(dicPath, getTextFromFile(p)); 
+				saveCompressedFile(p, outString);
+				break;
+			case 2:
+				System.out.println("Please: Enter text: ");
+				outString = Compress(dicPath, inStream.nextLine()); 
+				break;
+			default:
+				System.out.println("Invalid choice re-enter ur choice plz\n");
+		}
+		inStream.close();
+        System.out.println(outString);       
+    }
+	
+	public static List<String> readAllLines(String path) throws IOException {
+		List <String> lines = Collections.emptyList(); 
+	    lines = Files.readAllLines(Paths.get(path), StandardCharsets.UTF_8);
+	    return lines;
+	}
+	static void saveToDictionary(List<String> lines, String dicPath, int startPoint) throws IOException {
+		PrintWriter toFile = new PrintWriter(new FileOutputStream(dicPath));
+	    for (String line : lines)
+	    	toFile.println(line);
+	    toFile.close();
+	}
+	public static String getTextFromFile(String path) throws IOException {
+		String data = ""; 
+	    data = new String(Files.readAllBytes(Paths.get(path))); 
+	    return data; 
+		
+	}
+	public static String Compress(String dicPath, String inString) throws IOException {
+		String outString = "", word  ="";
+		List<String> lines = readAllLines(dicPath); //load dictionary in ArrayList
     	word = Character.toString( inString.charAt(0) );
+    	Integer index = 0, lastIndex = 0, startPoint = lines.size();
 
         for(int i = 0; i < inString.length() - 1; ++i) {
       
@@ -31,7 +62,8 @@ public class LZW78 {
         	if(index == -1) {
     			lines.add(word);
     			outString = outString.concat(Integer.toString(lastIndex) + "," + 
-    						Character.toString( word.charAt(word.length() - 1) )  + ",") ; /// add most recent index + last char added to word
+    						Character.toString( word.charAt(word.length() - 1) )  + ",") ; 
+    			/// add most recent index + last char added to word
     			
     			word =  Character.toString( inString.charAt(i+1) ); //reset word
     			lastIndex = 0;
@@ -39,33 +71,20 @@ public class LZW78 {
     			word = word + Character.toString( inString.charAt(i + 1) ); // set word
     			lastIndex = index;
     		}
-
         }
-        
-        System.out.println(outString);
         saveToDictionary(lines, dicPath, startPoint);
-        show(lines, dicPath);
-       
-    }
-	public static void checkFile(String path) throws IOException {
-		File dic = new File(path);
-		if(!dic.exists()) {
-			FileWriter writer = new FileWriter(dic);
-		}
+        return outString;
 	}
-	public static List<String> readAllLines(String path, List<String> lines) throws IOException {
-		lines = Collections.emptyList(); 
-	    lines = Files.readAllLines(Paths.get(path), StandardCharsets.UTF_8);
-	    return lines;
+	public static void saveCompressedFile(String path, String Content) throws IOException {
+		//createFile(path + File.separatorChar +"Compressed File.txt");
+		File f = new File(path);
+		BufferedWriter writer = new BufferedWriter(new FileWriter(f.getParent() + File.separatorChar +"Compressed File.txt"));
+	    writer.write(Content);
+	    writer.close();
 	}
-	static void saveToDictionary(List<String> lines, String dicPath, int startPoint) throws IOException {
-		
-		//for(int i = startPoint; i < lines.size(); ++i )
-			//Files.write(Paths.get(dicPath), (lines.get(i)+'\n').getBytes(), StandardOpenOption.APPEND);
-		PrintWriter toFile = new PrintWriter(new FileOutputStream(dicPath));
-	    for (String line : lines)
-	    	toFile.println(line);
-	    toFile.close();
+	public static void createFile(String path) throws IOException {
+		File file = new File(path);
+		file.createNewFile(); // if file already exists will do nothing 
 	}
 	
 }
